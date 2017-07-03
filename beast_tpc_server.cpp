@@ -283,9 +283,17 @@ int main()
         {
             tcp::socket socket{ ios };
 
-            acceptor.accept( socket );
+            beast::error_code ec;
+            acceptor.accept( socket, ec );
 
-            std::make_shared<connection>( std::move(socket), root )->run();
+            if( ec )
+            {
+                std::cerr << "Accept error: " << ec.message() << std::endl;
+            }
+            else
+            {
+                std::make_shared<connection>( std::move(socket), root )->run();
+            }
         }
     }
     catch( const std::exception& e )
