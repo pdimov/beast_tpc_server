@@ -35,9 +35,12 @@ private:
 
     static int next_id_;
 
-    tcp::socket socket_;
-    std::string root_;
     int id_ = ++next_id_;
+
+    tcp::socket socket_;
+    tcp::endpoint ep_;
+
+    std::string root_;
 
 private:
 
@@ -51,7 +54,7 @@ private:
     {
         std::ostringstream os;
 
-        os << "[#" << id_ << ' ' << socket_.remote_endpoint() << "] " << a1 << std::endl;
+        os << "[#" << id_ << ' ' << ep_ << "] " << a1 << std::endl;
 
         log_( os.str() );
     }
@@ -60,16 +63,21 @@ private:
     {
         std::ostringstream os;
 
-        os << "[#" << id_ << ' ' << socket_.remote_endpoint() << "] " << a1 << ' ' << a2 << std::endl;
+        os << "[#" << id_ << ' ' << ep_ << "] " << a1 << ' ' << a2 << std::endl;
 
         log_( os.str() );
     }
 
 public:
 
-    explicit connection( tcp::socket&& socket, std::string const& root ): socket_( std::move(socket) ), root_( root )
+    explicit connection( tcp::socket&& socket, std::string const& root ): socket_( std::move(socket) ), ep_( socket_.remote_endpoint() ), root_( root )
     {
         log( "Connected" );
+    }
+
+    ~connection()
+    {
+        log( "Disconnected" );
     }
 
     void run()
@@ -221,7 +229,7 @@ private:
 
                 if( ec == http::error::end_of_stream )
                 {
-                    log( "Disconnected" );
+                    log( "Connection closed" );
                     break;
                 }
 
